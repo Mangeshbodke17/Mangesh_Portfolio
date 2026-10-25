@@ -1,12 +1,14 @@
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import {
   AnimatePresence,
+  animate,
   motion,
+  useInView,
   useReducedMotion,
   useScroll,
   useSpring,
 } from 'motion/react'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { experience, type ExperienceProduct, type ExperienceSlide } from '../content'
 import { FadeIn } from './FadeIn'
 
@@ -288,6 +290,180 @@ function JobPages({ slides }: { slides: ExperienceSlide[] }) {
   )
 }
 
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+
+function parseMonth(token: string) {
+  const [mon, yearText] = token.trim().split(/\s+/)
+  const month = MONTHS.indexOf(mon.slice(0, 3).toLowerCase())
+  const year = Number(yearText)
+  if (month < 0 || !Number.isFinite(year)) return null
+  return { year, month }
+}
+
+function tenureMonths(dates: string, now = new Date()) {
+  const parts = dates.split(/\s*[–—-]\s*/).filter(Boolean)
+  const start = parseMonth(parts[0] ?? '')
+  if (!start) return 1
+  if (parts.length < 2) return 1
+  const endToken = parts[1].toLowerCase()
+  const end =
+    endToken === 'present'
+      ? { year: now.getFullYear(), month: now.getMonth() }
+      : parseMonth(parts[1])
+  if (!end) return 1
+  return Math.max(1, (end.year - start.year) * 12 + (end.month - start.month) + 1)
+}
+
+function tenureLabel(months: number) {
+  if (months <= 0) return '0 months'
+  if (months < 12) return months === 1 ? '1 month' : `${months} months`
+  const years = Math.floor(months / 12)
+  const rest = months % 12
+  const yearLabel = years === 1 ? '1 yr' : `${years} yrs`
+  if (rest === 0) return yearLabel
+  return `${yearLabel} ${rest} mo`
+}
+
+function TenureFigure({
+  months,
+  run,
+  reduce,
+}: {
+  months: number
+  run: boolean
+  reduce: boolean | null
+}) {
+  const [shown, setShown] = useState(0)
+
+  useEffect(() => {
+    if (reduce) {
+      setShown(months)
+      return
+    }
+    if (!run) {
+      setShown(0)
+      return
+    }
+    setShown(0)
+    const controls = animate(0, months, {
+      duration: 1.15,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (value) => setShown(Math.round(value)),
+    })
+    return () => controls.stop()
+  }, [months, reduce, run])
+
+  return <>{tenureLabel(shown)}</>
+}
+
+function TenureBoard({
+  openId,
+  onPick,
+}: {
+  openId: string
+  onPick: (id: string) => void
+}) {
+  const reduce = useReducedMotion()
+  const ref = useRef<HTMLDivElement>(null)
+  const seen = useInView(ref, { once: false, amount: 0.45 })
+  const [fill, setFill] = useState(0)
+  const rows = experience.map((job) => ({
+    id: job.id,
+    company: job.company,
+    place: job.place,
+    mode: job.mode,
+    kind: job.type,
+    dates: job.dates,
+    months: tenureMonths(job.dates),
+    live: /present/i.test(job.dates),
+    fullTime: /full-time/i.test(job.type),
+  }))
+  const max = Math.max(...rows.map((row) => row.months))
+  const fullTimeMonths = rows
+    .filter((row) => row.fullTime)
+    .reduce((sum, row) => sum + row.months, 0)
+  const run = Boolean(seen || reduce)
+
+  useEffect(() => {
+    if (reduce) {
+      setFill(1)
+      return
+    }
+    if (!seen) {
+      setFill(0)
+      return
+    }
+    setFill(0)
+    const controls = animate(0, 1, {
+      duration: 1.15,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: setFill,
+    })
+    return () => controls.stop()
+  }, [reduce, seen])
+
+  return (
+    <div ref={ref} className="mt-8">
+      <div className="flex items-end justify-between gap-4">
+        <p className="text-[11px] tracking-[0.22em] text-violet uppercase">Full-time</p>
+        <p className="font-display text-3xl tracking-tight text-ink">
+          <TenureFigure months={fullTimeMonths} run={run} reduce={reduce} />
+        </p>
+      </div>
+      <ul className="mt-4 space-y-2">
+        {rows.map((job) => {
+          const on = openId === job.id
+          return (
+            <li key={job.id}>
+              <button
+                type="button"
+                onClick={() => onPick(job.id)}
+                className={`w-full rounded-2xl border px-3.5 py-3 text-left transition-colors ${
+                  on
+                    ? 'border-lilac/40 bg-violet/15'
+                    : 'border-white/10 bg-white/[0.03] hover:border-white/20'
+                }`}
+              >
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className={`text-sm ${on ? 'text-ink' : 'text-fog'}`}>{job.company}</span>
+                  <span className="font-display text-lg tracking-tight text-ink">
+                    <TenureFigure months={job.months} run={run} reduce={reduce} />
+                  </span>
+                </span>
+                <span className="mt-1 block text-[11px] tracking-[0.16em] text-violet uppercase">
+                  {job.kind}
+                </span>
+                <span className="mt-0.5 flex items-center gap-2 text-xs text-fog">
+                  {job.place}
+                  <span className="rounded-full border border-white/10 px-1.5 py-0.5 text-[10px] tracking-wide text-lilac uppercase">
+                    {job.mode}
+                  </span>
+                </span>
+                <span className="mt-1 flex items-center gap-2 text-[11px] tracking-wide text-violet uppercase">
+                  {job.dates}
+                  {job.live ? (
+                    <span className="rounded-full bg-violet/20 px-1.5 py-0.5 text-[10px] text-lilac">
+                      Now
+                    </span>
+                  ) : null}
+                </span>
+                <span className="mt-2.5 block h-1 overflow-hidden rounded-full bg-white/10">
+                  <span
+                    className={`block h-full rounded-full ${
+                      on ? 'bg-violet shadow-[0_0_12px_rgba(167,139,250,0.85)]' : 'bg-violet/45'
+                    }`}
+                    style={{ width: `${fill * (job.months / max) * 100}%` }}
+                  />
+                </span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
+  )
+}
+
 export function Experience() {
   const [openId, setOpenId] = useState(experience[0]?.id ?? '')
   const reduce = useReducedMotion()
@@ -312,27 +488,7 @@ export function Experience() {
             <h2 className="font-display mt-3 text-4xl tracking-tight text-ink sm:text-5xl">
               The journey
             </h2>
-            <p className="mt-4 max-w-sm text-base leading-relaxed text-fog">
-              Full-time SDE-1 now. Two frontend internships before that.
-            </p>
-            <ul className="mt-8 hidden space-y-3 lg:block">
-              {experience.map((job) => (
-                <li key={job.id}>
-                  <button
-                    type="button"
-                    onClick={() => setOpenId(job.id)}
-                    className={`text-left text-sm transition-colors ${
-                      openId === job.id ? 'text-ink' : 'text-fog hover:text-ink'
-                    }`}
-                  >
-                    <span className="block text-[11px] tracking-wide text-violet uppercase">
-                      {job.dates}
-                    </span>
-                    {job.company}
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <TenureBoard openId={openId} onPick={setOpenId} />
           </FadeIn>
         </div>
 
@@ -365,7 +521,7 @@ export function Experience() {
                   >
                     <div>
                       <p className="text-[11px] tracking-wide text-violet uppercase">
-                        {job.type} · {job.dates}
+                        {job.type} · {job.dates} · {tenureLabel(tenureMonths(job.dates))}
                       </p>
                       <h3 className="font-display mt-1 text-2xl text-ink">
                         {job.company}

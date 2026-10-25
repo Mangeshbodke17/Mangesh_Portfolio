@@ -32,6 +32,7 @@ export type ExperienceItem = {
   place: string
   dates: string
   type: string
+  mode: 'Onsite' | 'WFH'
   slides: ExperienceSlide[]
   work?: string[]
   topics?: ExperienceSlide[]
@@ -46,6 +47,7 @@ export const experience: ExperienceItem[] = [
     place: 'Navi Mumbai',
     dates: 'Dec 2025 – Present',
     type: 'Full-time',
+    mode: 'Onsite',
     slides: [],
     products: [
       {
@@ -189,6 +191,7 @@ export const experience: ExperienceItem[] = [
     place: 'Baner, Pune',
     dates: 'Nov 2025',
     type: 'Internship',
+    mode: 'Onsite',
     slides: [],
     work: [
       'UI for one Fortune Business Insights site, the public market-research pages',
@@ -226,6 +229,7 @@ export const experience: ExperienceItem[] = [
     place: 'South Africa',
     dates: 'Jun 2025 – Oct 2025',
     type: 'Internship',
+    mode: 'WFH',
     slides: [],
     work: [
       'Rebuilt the myNSFAS apply → upload → track flow',
