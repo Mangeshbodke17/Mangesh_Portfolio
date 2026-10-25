@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+
+  --color-canvas: #100c18;
+  --color-panel: #1a1426;
+  --color-raised: #241c34;
+  --color-ink: #f7f5ff;
+  --color-fog: #a89bb8;
+  --color-violet: #a78bfa;
+  --color-lilac: #c4b5fd;
+  --color-brand: #7c3aed;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--color-canvas);
+  color: var(--color-fog);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+#root {
+  min-height: 100svh;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-violet) 40%, transparent);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-violet);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 80;
+  border-radius: 0.5rem;
+  background: var(--color-brand);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 1rem;
+}
+
+.noise {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  opacity: 0.045;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+.skill-orbit-ring {
+  transition: opacity 0.4s ease;
+}
+
+.skill-orbit-name {
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  color: var(--color-fog);
+  opacity: 0;
+  transition:
+    max-width 0.32s ease,
+    opacity 0.32s ease,
+    color 0.32s ease;
+}
+
+.skill-orbit-chip[data-focus='true'] {
+  gap: 0.45rem;
+  border-color: color-mix(in srgb, var(--color-lilac) 75%, transparent);
+  background: color-mix(in srgb, var(--color-panel) 88%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--color-violet) 45%, transparent),
+    0 12px 36px color-mix(in srgb, var(--color-brand) 42%, transparent);
+  padding: 0.25rem 0.85rem 0.25rem 0.25rem;
+}
+
+.skill-orbit-chip[data-focus='true'][data-inward='left'] {
+  flex-direction: row-reverse;
+  padding: 0.25rem 0.25rem 0.25rem 0.85rem;
+}
+
+.skill-orbit-chip[data-focus='true'] .skill-orbit-name {
+  max-width: 9rem;
+  color: var(--color-ink);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skill-orbit-name {
+    transition: none;
+  }
+}
