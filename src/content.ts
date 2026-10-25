@@ -203,14 +203,14 @@ export const experience: ExperienceItem[] = [
         body: 'React, TypeScript, JavaScript, HTML, and CSS for the industry pages, the report, the charts, and the sample request.',
       },
       {
-        id: 'lazy',
-        label: 'Lazy load',
-        body: 'Charts and images below the first screen load when the reader reaches them. The top of the report — the market and the forecast — is what arrives first.',
+        id: 'memo',
+        label: 'useMemo',
+        body: 'The market and forecast series are prepared once. A hover or a resize reuses that data instead of building the charts again.',
       },
       {
-        id: 'split',
-        label: 'Code split',
-        body: 'The report page is its own chunk. Opening an industry page does not download every report on the site.',
+        id: 'callback',
+        label: 'useCallback',
+        body: 'The sample-request handler stays the same function, so typing in the form does not redraw the charts beside it.',
       },
       {
         id: 'layout',
